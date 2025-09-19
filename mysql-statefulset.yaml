@@ -14,18 +14,13 @@ spec:
       labels:
         app: mysql
     spec:
-      containers:
-        - name: mysql
-          image: mysql:8.0
-          ports:
-            - containerPort: 3306
-              name: mysql
+      initContainers:
+        - name: init-sql
+          image: busybox
+          command: ["sh", "-c"]
+          args:
+            - envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
           env:
-            - name: ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: ROOT_PASSWORD
             - name: APP_USER
               valueFrom:
                 secretKeyRef:
@@ -37,12 +32,32 @@ spec:
                   name: mysql-secret
                   key: USER_PASSWORD
           volumeMounts:
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+              subPath: init.sql
+            - name: tmp-sql
+              mountPath: /tmp/init.sql
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+              name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: ROOT_PASSWORD
+          volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
             - name: init-sql
               mountPath: /docker-entrypoint-initdb.d
       volumes:
         - name: init-sql
+          emptyDir: {}
+        - name: tmp-sql
           configMap:
             name: mysql-init-sql
   volumeClaimTemplates:

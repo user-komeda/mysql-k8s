@@ -6,6 +6,6 @@ metadata:
 data:
   init.sql: |
     CREATE DATABASE IF NOT EXISTS mydb;
-    CREATE USER 'appuser'@'%' IDENTIFIED BY 'password';
-    GRANT ALL PRIVILEGES ON mydb.* TO 'appuser'@'%';
+    CREATE USER '${APP_USER}'@'%' IDENTIFIED BY '${USER_PASSWORD}';
+    GRANT ALL PRIVILEGES ON mydb.* TO '${APP_USER}'@'%';
     FLUSH PRIVILEGES;
