@@ -14,58 +14,60 @@ spec:
       labels:
         app: mysql
     spec:
-      initContainers:
-        - name: init-sql
-          image: alpine:3.18
-          command: ["sh", "-c"]
-          args:
-            - apk add --no-cache gettext \
-              && envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
-          env:
-            - name: APP_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: APP_USER
-            - name: USER_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: USER_PASSWORD
-          volumeMounts:
-            - name: init-sql
-              mountPath: /docker-entrypoint-initdb.d
-            - name: tmp-sql
-              mountPath: /tmp/init.sql
-      containers:
-        - name: mysql
-          image: mysql:8.0
-          ports:
-            - containerPort: 3306
-              name: mysql
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: ROOT_PASSWORD
-          volumeMounts:
-            - name: mysql-data
-              mountPath: /var/lib/mysql
-            - name: init-sql
-              mountPath: /docker-entrypoint-initdb.d
-      volumes:
-        - name: init-sql
-          emptyDir: {}
-        - name: tmp-sql
-          configMap:
-            name: mysql-init-sql
-  volumeClaimTemplates:
-    - metadata:
-        name: mysql-data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        storageClassName: local-path
-        resources:
-          requests:
-            storage: 10Gi
+initContainers:
+  - name: init-sql
+    image: alpine:3.18
+    command: ["sh", "-c"]
+    args:
+      - apk update \
+        && apk add --no-cache gettext \
+        && envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
+    env:
+      - name: APP_USER
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: APP_USER
+      - name: USER_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: mysql-secret
+            key: USER_PASSWORD
+    volumeMounts:
+      - name: tmp-sql
+        mountPath: /tmp/init.sql
+      - name: init-sql
+        mountPath: /docker-entrypoint-initdb.d
+
+        containers:
+          - name: mysql
+            image: mysql:8.0
+            ports:
+              - containerPort: 3306
+                name: mysql
+            env:
+              - name: MYSQL_ROOT_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: mysql-secret
+                    key: ROOT_PASSWORD
+            volumeMounts:
+              - name: mysql-data
+                mountPath: /var/lib/mysql
+              - name: init-sql
+                mountPath: /docker-entrypoint-initdb.d
+        volumes:
+          - name: init-sql
+            emptyDir: {}
+          - name: tmp-sql
+            configMap:
+              name: mysql-init-sql
+    volumeClaimTemplates:
+      - metadata:
+          name: mysql-data
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: local-path
+          resources:
+            requests:
+              storage: 10Gi
