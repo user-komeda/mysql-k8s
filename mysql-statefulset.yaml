@@ -19,8 +19,7 @@ spec:
           image: alpine:3.18
           command: ["sh", "-c"]
           args:
-            - apk update \
-              && apk add --no-cache gettext \
+            - apk update && apk add --no-cache gettext \
               && envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
           env:
             - name: APP_USER
@@ -49,3 +48,24 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: mysql-secret
+                  key: ROOT_PASSWORD
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-sql
+          emptyDir: {}
+        - name: tmp-sql
+          configMap:
+            name: mysql-init-sql
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 10Gi
