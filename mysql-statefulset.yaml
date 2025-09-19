@@ -18,10 +18,12 @@ spec:
         - name: init-sql
           image: alpine:3.18
           command: ["sh", "-c"]
-          args: set -ex &&
-            apk update &&
-            apk add --no-cache gettext &&
-            envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
+          args:
+            - >
+              set -ex &&
+              apk update &&
+              apk add --no-cache gettext &&
+              envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
           env:
             - name: APP_USER
               valueFrom:
@@ -36,6 +38,7 @@ spec:
           volumeMounts:
             - name: tmp-sql
               mountPath: /tmp/init.sql
+              subPath: init.sql
             - name: init-sql
               mountPath: /docker-entrypoint-initdb.d
       containers:
