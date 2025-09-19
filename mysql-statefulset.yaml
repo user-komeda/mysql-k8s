@@ -23,10 +23,6 @@ spec:
               apt-get update &&
               apt-get install -y gettext-base &&
               envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
-
-        apt-get update &&
-        apt-get install -y gettext-base &&
-        envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
           env:
             - name: APP_USER
               valueFrom:
