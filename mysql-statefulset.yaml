@@ -20,12 +20,31 @@ spec:
           ports:
             - containerPort: 3306
               name: mysql
-          envFrom:
-            - secretRef:
-                name: mysql-secret # InfisicalSecret が同期した Secret
+          env:
+            - name: ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: ROOT_PASSWORD
+            - name: APP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: APP_USER
+            - name: USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: USER_PASSWORD
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-sql
+          configMap:
+            name: mysql-init-sql
   volumeClaimTemplates:
     - metadata:
         name: mysql-data
