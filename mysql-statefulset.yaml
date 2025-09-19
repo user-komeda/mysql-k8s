@@ -16,7 +16,17 @@ spec:
     spec:
       initContainers:
         - name: init-sql
-          image: quay.io/envsubst/envsubst:latest
+          image: bitnami/minideb:latest
+          command: ["bash", "-c"]
+          args:
+            - >
+              apt-get update &&
+              apt-get install -y gettext-base &&
+              envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
+
+        apt-get update &&
+        apt-get install -y gettext-base &&
+        envsubst < /tmp/init.sql > /docker-entrypoint-initdb.d/init.sql
           env:
             - name: APP_USER
               valueFrom:
